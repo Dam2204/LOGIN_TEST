@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export default async function (req, res, next) {
   try {
@@ -12,11 +15,11 @@ export default async function (req, res, next) {
     const [tokenType, token] = authorization.split(' ');
     if (tokenType !== 'Bearer') throw new Error('토큰 타입이 Bearer 형식이 아닙니다.');
 
-    const decodedToken = jwt.verify(token, 'custom-key');
-    const userId = decodedToken.id;
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    const id = decodedToken.id;
 
     const user = await prisma.users.findFirst({
-      where: { id: +userId },
+      where: { id: +id },
     });
 
     if (!user) {

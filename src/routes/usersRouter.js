@@ -4,6 +4,7 @@ import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_SECRET_KEY } from '../constants/env.js';
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.post('/sign-up', async (req, res, next) => {
   // password hash 처리
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Users 테이블에 사용자를 추가합니다.
+  // 신규 사용자 등록
   const user = await prisma.users.create({
     data: {
       username,
@@ -55,9 +56,13 @@ router.post('/sign-in', async (req, res, next) => {
     return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
   }
 
-  const token = jwt.sign({ id: user.id }, 'custom-key');
+  // jwt 토큰 발급
+  const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '60s' });
+  const refreshToken = jwt.sign({ id: user.id }, REFRESH_TOKEN_SECRET_KEY, { expiresIn: '1d' });
 
-  res.cookie('authorization', `Bearer ${token}`);
+  // 쿠키에 토큰 전달
+  res.cookie('accessToken', `Bearer ${accessToken}`);
+  res.cookie('refreshToken', `Bearer ${refreshToken}`);
   return res.status(200).json({ message: '로그인에 성공하였습니다.' });
 });
 
