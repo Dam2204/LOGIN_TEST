@@ -1,3 +1,5 @@
+// src/constants/env.js
+
 import dotenv from 'dotenv';
 
 // 환경변수 로드
