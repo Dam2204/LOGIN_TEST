@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_SECRET_KEY } from '../constants/env.js';
+import { isValidPassword, isValidUsername } from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -13,14 +14,28 @@ router.post('/sign-up', async (req, res, next) => {
   try {
     const { username, password, nickname } = req.body;
 
+    // username 조건에 벗어나는 경우
+    if (!isValidUsername(username)) {
+      return res.status(400).json({ message: '영어 소문자 1~30 글자만 입력 가능합니다.' });
+    }
+
+    // 존재하는 사용자인지 조회회
     const isExistUser = await prisma.users.findFirst({
       where: {
         username,
       },
     });
 
+    // 이미 존재하는 사용자일 경우
     if (isExistUser) {
-      return res.status(409).json({ message: '이미 존재하는 username 입니다.' });
+      return res.status(400).json({ message: '이미 존재하는 username 입니다.' });
+    }
+
+    // password 조건에 벗어나는 경우
+    if (!isValidPassword(password)) {
+      return res.status(400).json({
+        message: '최소 8자리 이상 영문 대소문자, 숫자, 특수문자가 각각 1개 이상 입력해주세요.',
+      });
     }
 
     // password hash 처리
@@ -42,7 +57,7 @@ router.post('/sign-up', async (req, res, next) => {
       },
     });
 
-    // username, nickname 값 추출출
+    // username, nickname 값 추출
     const userData = await prisma.users.findFirst({
       where: {
         username: username,
@@ -96,7 +111,7 @@ router.post('/sign-in', async (req, res, next) => {
   }
 
   // jwt 토큰 발급
-  const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '60s' });
+  const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '10m' });
   const refreshToken = jwt.sign({ id: user.id }, REFRESH_TOKEN_SECRET_KEY, { expiresIn: '1d' });
 
   // 쿠키에 토큰 전달
