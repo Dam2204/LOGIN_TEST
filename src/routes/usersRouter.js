@@ -35,7 +35,42 @@ router.post('/sign-up', async (req, res, next) => {
       },
     });
 
-    return res.status(201).json({ message: '회원가입이 완료되었습니다.' });
+    // 사용자 권한 등록
+    const authority = await prisma.authority.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    // username, nickname 값 추출출
+    const userData = await prisma.users.findFirst({
+      where: {
+        username: username,
+      },
+      select: {
+        username: true,
+        nickname: true,
+      },
+    });
+
+    // authorities 추출
+    const authorities = await prisma.authority.findFirst({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        authorityName: true,
+      },
+    });
+
+    // 사용자에게 반환되는 데이터
+    const confirmData = {
+      username: userData.username,
+      nickname: userData.nickname,
+      authorities: authorities,
+    };
+
+    return res.status(201).json(confirmData);
   } catch (err) {
     next(err);
   }
@@ -67,7 +102,9 @@ router.post('/sign-in', async (req, res, next) => {
   // 쿠키에 토큰 전달
   res.cookie('accessToken', `Bearer ${accessToken}`);
   res.cookie('refreshToken', `Bearer ${refreshToken}`);
-  return res.status(200).json({ message: '로그인에 성공하였습니다.' });
+
+  // 사용자에게 반환되는 데이터
+  return res.status(200).json({ token: accessToken });
 });
 
 export default router;
