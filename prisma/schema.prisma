@@ -30,5 +30,5 @@ model Authority {
   authorityName   String        @default("ROLE_USER")
   userId          Int
 
-  user User @relation(fields: [userId], references: [id])
+  users Users @relation(fields: [userId], references: [id])
 }
