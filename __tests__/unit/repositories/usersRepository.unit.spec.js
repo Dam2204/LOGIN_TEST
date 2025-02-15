@@ -48,6 +48,7 @@ describe('Users Repository Unit Test', () => {
     expect(mockPrisma.authority.create).toHaveBeenCalledTimes(1);
 
     // create 메서드에 전달한 데이터 검증
+    // hash된 password 대조 이슈로 mockPrisma.users.create 데이터 검증 보류. 추가 검토 필요.
     expect(mockPrisma.authority.create).toHaveBeenCalledWith({
       data: {
         userId: createUser.id,
