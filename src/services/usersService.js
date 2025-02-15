@@ -1,12 +1,13 @@
-import { UsersRepository } from '../repositories/usersRepository.js';
 import { isValidPassword, isValidUsername } from '../utils/validation.js';
-import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_SECRET_KEY } from '../constants/env.js';
 
 export class UsersService {
-  usersRepository = new UsersRepository();
+  constructor(prisma, usersRepository) {
+    this.prisma = prisma;
+    this.usersRepository = this.usersRepository;
+  }
 
   signUp = async (req, res, next) => {
     try {
@@ -27,7 +28,7 @@ export class UsersService {
       }
 
       // 존재하는 사용자인지 조회
-      const isExistUser = await prisma.users.findFirst({
+      const isExistUser = await this.prisma.users.findFirst({
         where: {
           username,
         },
@@ -52,7 +53,7 @@ export class UsersService {
       const { username, password } = req.body;
 
       // 사용자 조회
-      const user = await prisma.users.findFirst({
+      const user = await this.prisma.users.findFirst({
         where: {
           username,
         },

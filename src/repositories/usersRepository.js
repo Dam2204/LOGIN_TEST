@@ -1,14 +1,16 @@
-import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 
 export class UsersRepository {
+  constructor(prisma) {
+    this.prisma = prisma;
+  }
   createUser = async (username, password, nickname) => {
     try {
       // password hash 처리
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // 신규 사용자 등록
-      const user = await prisma.users.create({
+      const user = await this.prisma.users.create({
         data: {
           username,
           password: hashedPassword,
@@ -17,14 +19,14 @@ export class UsersRepository {
       });
 
       // 사용자 권한 등록
-      const authority = await prisma.authority.create({
+      const authority = await this.prisma.authority.create({
         data: {
           userId: user.id,
         },
       });
 
       // username, nickname 값 추출
-      const userData = await prisma.users.findFirst({
+      const userData = await this.prisma.users.findFirst({
         where: {
           username: username,
         },
@@ -35,7 +37,7 @@ export class UsersRepository {
       });
 
       // authorities 추출
-      const authorities = await prisma.authority.findFirst({
+      const authorities = await this.prisma.authority.findFirst({
         where: {
           userId: user.id,
         },
