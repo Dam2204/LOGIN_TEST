@@ -1,4 +1,4 @@
-// __tests__/unit/posts.repository.unit.spec.js
+// __tests__/unit/usersRepository.unit.spec.js
 
 import { expect, jest } from '@jest/globals';
 import { UsersRepository } from '../../../src/repositories/usersRepository';
