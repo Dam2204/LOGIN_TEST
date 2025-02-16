@@ -2,8 +2,13 @@
   "name": "login_test",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
+  "jest": {
+    "transform": {}
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "dev": "npx nodemon src/server.js"
   },
   "repository": {
     "type": "git",
@@ -11,7 +16,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Dam2204/LOGIN_TEST/issues"
   },
@@ -19,12 +24,17 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.3.1",
+    "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.3.1"
+    "prisma": "^6.3.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.9"
   }
 }
