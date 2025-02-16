@@ -4,6 +4,15 @@ export class UsersRepository {
   constructor(prisma) {
     this.prisma = prisma;
   }
+
+  findUserByUserName = async (username) => {
+    const user = await this.prisma.users.findFirst({
+      where: { username },
+    });
+
+    return user;
+  };
+
   createUser = async (username, password, nickname) => {
     try {
       // password hash 처리
