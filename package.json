@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "dev": "npx nodemon src/server.js"
+    "dev": "npx nodemon src/server.js",
+    "swagger": "node ./swagger.js"
   },
   "repository": {
     "type": "git",
@@ -31,10 +32,13 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.3.1",
+    "swagger-autogen": "^2.23.7",
     "winston": "^3.17.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }
