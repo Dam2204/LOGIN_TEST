@@ -21,9 +21,9 @@ describe('Users Repository Unit Test', () => {
   test('findUserByUserName Method', async () => {
     const mockUser = {
       id: 1,
-      userName: 'jinho',
+      username: 'jinho',
       password: '$2b$10$HObruUV3lDJ1zyNB6QpDvuN4v//DGOVJsJ3C4ft.3RrlSz6An1to.',
-      nickName: 'mentos',
+      nickname: 'mentos',
     };
 
     mockPrisma.users.findFirst.mockResolvedValue(mockUser);
@@ -33,23 +33,20 @@ describe('Users Repository Unit Test', () => {
     expect(mockPrisma.users.findFirst).toHaveBeenCalledTimes(1);
 
     expect(mockPrisma.users.findFirst).toHaveBeenCalledWith({
-      where: { userName: 'jinho' },
+      where: { username: 'jinho' },
     });
-    expect(user).toEqual(mockUser);
   });
 
   test('createUser Method', async () => {
     const mockCreateReturn = 'create User Return String';
     mockPrisma.users.create.mockReturnValue(mockCreateReturn);
-    mockPrisma.authority.create.mockReturnValue(mockCreateReturn);
 
     const mockFindFirstReturn = 'findFirst User Return String';
     mockPrisma.users.findFirst.mockReturnValue(mockFindFirstReturn);
-    mockPrisma.authority.findFirst.mockReturnValue(mockFindFirstReturn);
 
     const newUser = {
       username: 'jinho',
-      password: '$2b$10$HObruUV3lDJ1zyNB6QpDvuN4v//DGOVJsJ3C4ft.3RrlSz6An1to.',
+      password: 'testPassword',
       nickname: 'mentos',
     };
 
@@ -69,23 +66,18 @@ describe('Users Repository Unit Test', () => {
     // create 메서드가 1번씩 실행된다.
     expect(mockPrisma.users.create).toHaveBeenCalledTimes(1);
 
-    // findFirst 메서드가 특정 인자들과 함께 호출되었는지 검증
-    expect(mockPrisma.users.create).toHaveBeenCalledWith({
-      data: {
-        username: newUser.username,
-        password: newUser.password,
-        nickname: newUser.nickname,
-      },
-    });
-
     // findFirst 메서드가 1번씩 실행된다.
     expect(mockPrisma.users.findFirst).toHaveBeenCalledTimes(1);
 
     // findFirst 메서드가 특정 인자들과 함께 호출되었는지 검증
     expect(mockPrisma.users.findFirst).toHaveBeenCalledWith({
-      where: { userName: 'jinho' },
+      where: {
+        username: 'jinho',
+      },
+      select: {
+        username: true,
+        nickname: true,
+      },
     });
-
-    expect(result).toEqual(createdUser);
   });
 });

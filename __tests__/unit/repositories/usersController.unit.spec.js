@@ -7,12 +7,16 @@ const mockUsersService = {
   validateToken: jest.fn(),
 };
 
-const mockRequest = (body) => ({ body });
+const mockRequest = (body = {}, cookies = {}) => ({
+  body,
+  cookies,
+});
 
 const mockResponse = () => {
   const res = {};
   res.status = jest.fn().mockReturnValue(res);
   res.json = jest.fn().mockReturnValue(res);
+  res.cookie = jest.fn().mockReturnValue(res);
   return res;
 };
 
@@ -33,8 +37,11 @@ describe('User Controller Unit Test', () => {
       nickname: 'mentos',
     });
     const res = mockResponse();
-    const mockUser = { id: 1, username: 'jinho', nickname: 'mentos' };
-    mockUsersService.signUp.mockResolvedValue(mockUser);
+    const mockUser = { username: 'jinho', nickname: 'mentos' };
+    mockUsersService.signUp.mockResolvedValue({
+      status: 200,
+      message: mockUser,
+    });
 
     await usersController.signUp(req, res, mockNext);
 
@@ -47,9 +54,24 @@ describe('User Controller Unit Test', () => {
     const req = mockRequest({ password: 'testPassword', nickname: 'mentos' });
     const res = mockResponse();
 
+    mockUsersService.signUp.mockRejectedValue({
+      status: 400,
+      message: {
+        error: {
+          code: 'USER_DATA_NULL',
+          message: '모든 항목을 기입해주세요.',
+        },
+      },
+    });
+
     await usersController.signUp(req, res, mockNext);
 
-    expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
+    expect(mockNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 400,
+        message: expect.any(Object),
+      }),
+    );
   });
 
   test('signUp Method by Failure (User already exists)', async () => {
@@ -59,6 +81,7 @@ describe('User Controller Unit Test', () => {
       nickname: 'mentos',
     });
     const res = mockResponse();
+
     mockUsersService.signUp.mockRejectedValue({
       status: 409,
       message: {
@@ -71,20 +94,34 @@ describe('User Controller Unit Test', () => {
 
     await usersController.signUp(req, res, mockNext);
 
-    expect(mockNext.mock.calls[0][0].statusCode).toBe(409);
+    expect(mockNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 409,
+        message: expect.any(Object),
+      }),
+    );
   });
 
   test('signIn Method by Success', async () => {
     const req = mockRequest({ username: 'jinho', password: 'testPassword' });
     const res = mockResponse();
-    const mockUser = { id: 1, username: 'jinho', token: 'jwt-token' };
-    mockUsersService.signIn.mockResolvedValue(mockUser);
+    const mockToken = 'eKDIkdfjoakIdkfjpekdkcjdkoIOdjOKJDFOlLDKFJKL';
+
+    mockUsersService.signIn.mockResolvedValue({
+      status: 200,
+      message: {
+        token: mockToken,
+      },
+    });
 
     await usersController.signIn(req, res, mockNext);
 
     expect(mockUsersService.signIn).toHaveBeenCalledWith('jinho', 'testPassword');
+    expect(res.cookie).toHaveBeenCalledWith('token', expect.any(String));
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(mockUser);
+    expect(res.json).toHaveBeenCalledWith({
+      token: mockToken,
+    });
   });
 
   test('signIn Method by Failure', async () => {
@@ -102,11 +139,16 @@ describe('User Controller Unit Test', () => {
 
     await usersController.signIn(req, res, mockNext);
 
-    expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
+    expect(mockNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 400,
+        message: expect.any(Object),
+      }),
+    );
   });
 
   test('auth Method by Success', async () => {
-    const req = mockRequest({ token: 'jwt-token' });
+    const req = mockRequest({}, { token: 'test-token' });
     const res = mockResponse();
 
     const validation = {
@@ -118,7 +160,7 @@ describe('User Controller Unit Test', () => {
 
     await usersController.auth(req, res, mockNext);
 
-    expect(mockUsersService.validateToken).toHaveBeenCalledWith('jwt-token');
+    expect(mockUsersService.validateToken).toHaveBeenCalledWith('test-token');
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ message: '정상적으로 인증되었습니다.' });
   });
@@ -126,7 +168,7 @@ describe('User Controller Unit Test', () => {
   test('auth Method by Failure (Invalid token)', async () => {
     const req = mockRequest({ token: 'wrong-token' });
     const res = mockResponse();
-    mockUsersService.signIn.mockRejectedValue({
+    mockUsersService.validateToken.mockRejectedValue({
       status: 401,
       message: {
         error: {
@@ -136,15 +178,20 @@ describe('User Controller Unit Test', () => {
       },
     });
 
-    await usersController.signIn(req, res, mockNext);
+    await usersController.auth(req, res, mockNext);
 
-    expect(mockNext.mock.calls[0][0].statusCode).toBe(401);
+    expect(mockNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 401,
+        message: expect.any(Object),
+      }),
+    );
   });
 
   test('auth Method by Failure (Token not found)', async () => {
     const req = mockRequest();
     const res = mockResponse();
-    mockUsersService.signIn.mockRejectedValue({
+    mockUsersService.validateToken.mockRejectedValue({
       status: 400,
       message: {
         error: {
@@ -154,8 +201,13 @@ describe('User Controller Unit Test', () => {
       },
     });
 
-    await usersController.signIn(req, res, mockNext);
+    await usersController.auth(req, res, mockNext);
 
-    expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
+    expect(mockNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 400,
+        message: expect.any(Object),
+      }),
+    );
   });
 });
