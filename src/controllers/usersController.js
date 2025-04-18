@@ -20,10 +20,12 @@ export class UsersController {
 
       const user = await this.usersService.signIn(username, password);
 
-      const token = user.message.token;
+      if (user.status == 200) {
+        const token = user.message.token;
 
-      // 쿠키에 토큰 전달
-      res.cookie('token', token);
+        // 쿠키에 토큰 전달
+        res.cookie('token', token);
+      }
 
       // 사용자에게 반환되는 데이터
       return res.status(user.status).json(user.message);
