@@ -18,4 +18,7 @@ router.post('/sign-up', usersController.signUp);
 /** 사용자 로그인 API **/
 router.post('/sign-in', usersController.signIn);
 
+/** 사용자 인증 API **/
+router.get('/auth', usersController.auth);
+
 export default router;

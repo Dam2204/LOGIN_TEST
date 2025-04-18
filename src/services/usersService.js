@@ -85,7 +85,7 @@ export class UsersService {
       }
 
       // jwt 토큰 발급
-      const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '10m' });
+      const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '1m' });
 
       const successMessage = {
         status: 200,
@@ -97,6 +97,14 @@ export class UsersService {
       return successMessage;
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  validateToken = async (token) => {
+    try {
+      return jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
+    } catch (err) {
+      return null;
     }
   };
 }

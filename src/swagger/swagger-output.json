@@ -134,6 +134,64 @@
           }
         }
       }
+    },
+    "/api/auth": {
+      "get": {
+        "description": "인증",
+        "responses": {
+          "200": {
+            "description": "유효한 토큰인 경우",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "정상적으로 인증되었습니다."
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "토큰이 없는 경우",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": {
+                    "code": "TOKEN_NOT_FOUND",
+                    "message": "토큰이 없습니다."
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "유효하지 않은 토큰인 경우",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": {
+                    "code": "INVALID_TOKEN",
+                    "message": "토큰이 유효하지 않습니다."
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
