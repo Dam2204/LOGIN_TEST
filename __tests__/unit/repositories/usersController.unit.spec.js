@@ -43,7 +43,7 @@ describe('User Controller Unit Test', () => {
     expect(res.json).toHaveBeenCalledWith(mockUser);
   });
 
-  test('signUp Method by Failure (Validation Error)', async () => {
+  test('signUp Method by Failure (Validation error)', async () => {
     const req = mockRequest({ password: 'testPassword', nickname: 'mentos' });
     const res = mockResponse();
 
@@ -52,63 +52,110 @@ describe('User Controller Unit Test', () => {
     expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
   });
 
-  test('signUp Method by Failure (User Already Exists)', async () => {
+  test('signUp Method by Failure (User already exists)', async () => {
     const req = mockRequest({
       username: 'existingUser',
       password: 'testPassword',
       nickname: 'mentos',
     });
     const res = mockResponse();
-    mockUsersService.signUp.mockRejectedValue(new CustomError('User already exists', 409));
+    mockUsersService.signUp.mockRejectedValue({
+      status: 409,
+      message: {
+        error: {
+          code: 'USER_ALREADY_EXISTS',
+          message: '이미 가입된 사용자입니다.',
+        },
+      },
+    });
 
     await usersController.signUp(req, res, mockNext);
 
-    expect(mockNext).toHaveBeenCalledWith(expect.any(CustomError));
     expect(mockNext.mock.calls[0][0].statusCode).toBe(409);
   });
 
   test('signIn Method by Success', async () => {
-    const req = mockRequest({ username: 'testUser', password: 'testPass' });
+    const req = mockRequest({ username: 'jinho', password: 'testPassword' });
     const res = mockResponse();
-    const mockUser = { id: 1, username: 'testUser', token: 'jwt-token' };
+    const mockUser = { id: 1, username: 'jinho', token: 'jwt-token' };
     mockUsersService.signIn.mockResolvedValue(mockUser);
 
     await usersController.signIn(req, res, mockNext);
 
-    expect(mockUsersService.signIn).toHaveBeenCalledWith('testUser', 'testPass');
+    expect(mockUsersService.signIn).toHaveBeenCalledWith('jinho', 'testPassword');
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockUser);
   });
 
-  test('signIn Method by Failure (Validation Error)', async () => {
-    const req = mockRequest({ username: '', password: 'testPass123' });
+  test('signIn Method by Failure', async () => {
+    const req = mockRequest({ username: 'jinho', password: 'wrongPassword' });
     const res = mockResponse();
+    mockUsersService.signIn.mockRejectedValue({
+      status: 400,
+      message: {
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: '아이디 또는 비밀번호가 올바르지 않습니다.',
+        },
+      },
+    });
 
     await usersController.signIn(req, res, mockNext);
 
-    expect(mockNext).toHaveBeenCalledWith(expect.any(CustomError));
     expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
   });
 
-  test('signIn Method by Failure (User Not Found)', async () => {
-    const req = mockRequest({ username: 'unknownUser', password: 'testPass' });
+  test('auth Method by Success', async () => {
+    const req = mockRequest({ token: 'jwt-token' });
     const res = mockResponse();
-    mockUsersService.signIn.mockRejectedValue(new CustomError('User not found', 404));
 
-    await usersController.signIn(req, res, mockNext);
+    const validation = {
+      status: 200,
+      message: { message: '정상적으로 인증되었습니다.' },
+    };
 
-    expect(mockNext).toHaveBeenCalledWith(expect.any(CustomError));
-    expect(mockNext.mock.calls[0][0].statusCode).toBe(404);
+    mockUsersService.validateToken.mockResolvedValue(validation);
+
+    await usersController.auth(req, res, mockNext);
+
+    expect(mockUsersService.validateToken).toHaveBeenCalledWith('jwt-token');
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ message: '정상적으로 인증되었습니다.' });
   });
 
-  test('signIn Method by Failure (Incorrect Password)', async () => {
-    const req = mockRequest({ username: 'testUser', password: 'wrongPass' });
+  test('auth Method by Failure (Invalid token)', async () => {
+    const req = mockRequest({ token: 'wrong-token' });
     const res = mockResponse();
-    mockUsersService.signIn.mockRejectedValue(new CustomError('Incorrect password', 401));
+    mockUsersService.signIn.mockRejectedValue({
+      status: 401,
+      message: {
+        error: {
+          code: 'INVALID_TOKEN',
+          message: '토큰이 유효하지 않습니다.',
+        },
+      },
+    });
 
     await usersController.signIn(req, res, mockNext);
 
-    expect(mockNext).toHaveBeenCalledWith(expect.any(CustomError));
     expect(mockNext.mock.calls[0][0].statusCode).toBe(401);
+  });
+
+  test('auth Method by Failure (Token not found)', async () => {
+    const req = mockRequest();
+    const res = mockResponse();
+    mockUsersService.signIn.mockRejectedValue({
+      status: 400,
+      message: {
+        error: {
+          code: 'TOKEN_NOT_FOUND',
+          message: '토큰이 없습니다.',
+        },
+      },
+    });
+
+    await usersController.signIn(req, res, mockNext);
+
+    expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
   });
 });

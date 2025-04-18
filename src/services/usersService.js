@@ -16,7 +16,7 @@ export class UsersService {
       // 이미 존재하는 사용자일 경우
       if (isExistUser) {
         const errorMessage = {
-          status: 400,
+          status: 409,
           message: {
             error: {
               code: 'USER_ALREADY_EXISTS',
@@ -27,42 +27,14 @@ export class UsersService {
         return errorMessage;
       }
 
-      // username이 누락된 경우
-      if (!username) {
+      // 모든 항목을 기입하지 않았을 경우
+      if (!username || !password || !nickname) {
         const errorMessage = {
           status: 400,
           message: {
             error: {
-              code: 'USER_NAME_NULL',
-              message: 'username을 입력해주세요.',
-            },
-          },
-        };
-        return errorMessage;
-      }
-
-      // password가 누락된 경우
-      if (!password) {
-        const errorMessage = {
-          status: 400,
-          message: {
-            error: {
-              code: 'USER_PASSWORD_NULL',
-              message: 'password를 입력해주세요.',
-            },
-          },
-        };
-        return errorMessage;
-      }
-
-      // nickname이 누락된 경우
-      if (!nickname) {
-        const errorMessage = {
-          status: 400,
-          message: {
-            error: {
-              code: 'USER_NICKNAME_NULL',
-              message: 'nickname을 입력해주세요.',
+              code: 'USER_DATA_NULL',
+              message: '모든 항목을 기입해주세요.',
             },
           },
         };
@@ -143,7 +115,7 @@ export class UsersService {
       return successMessage;
     } catch (err) {
       const errorMessage = {
-        status: 400,
+        status: 401,
         message: {
           error: {
             code: 'INVALID_TOKEN',
