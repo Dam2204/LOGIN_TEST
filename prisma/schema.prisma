@@ -20,15 +20,6 @@ model Users {
   nickname    String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @default(now())
-  authorities Authority[]
 
   @@map("users")
-}
-
-model Authority {
-  id              Int           @id @default(autoincrement())
-  authorityName   String        @default("ROLE_USER")
-  userId          Int
-
-  users Users @relation(fields: [userId], references: [id])
 }
