@@ -36,28 +36,10 @@ export class UsersController {
     try {
       const { token } = req.cookies;
 
-      if (!token) {
-        return res.status(400).json({
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: '토큰이 없습니다.',
-          },
-        });
-      }
-
       const payload = await this.usersService.validateToken(token);
 
-      if (!payload) {
-        return res.status(401).json({
-          error: {
-            code: 'INVALID_TOKEN',
-            message: '토큰이 유효하지 않습니다.',
-          },
-        });
-      }
-
       // 사용자에게 반환되는 데이터
-      return res.status(200).json({ message: '정상적으로 인증되었습니다.' });
+      return res.status(payload.status).json(payload.message);
     } catch (err) {
       next(err);
     }

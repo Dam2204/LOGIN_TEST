@@ -44,20 +44,19 @@ describe('User Controller Unit Test', () => {
   });
 
   test('signUp Method by Failure (Validation Error)', async () => {
-    const req = mockRequest({ username: '', password: 'testPass', nickname: 'testNick' });
+    const req = mockRequest({ password: 'testPassword', nickname: 'mentos' });
     const res = mockResponse();
 
     await usersController.signUp(req, res, mockNext);
 
-    expect(mockNext).toHaveBeenCalledWith(expect.any(CustomError));
     expect(mockNext.mock.calls[0][0].statusCode).toBe(400);
   });
 
   test('signUp Method by Failure (User Already Exists)', async () => {
     const req = mockRequest({
       username: 'existingUser',
-      password: 'testPass',
-      nickname: 'testNick',
+      password: 'testPassword',
+      nickname: 'mentos',
     });
     const res = mockResponse();
     mockUsersService.signUp.mockRejectedValue(new CustomError('User already exists', 409));

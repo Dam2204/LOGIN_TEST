@@ -1,5 +1,5 @@
 // import { isValidPassword, isValidUsername } from '../utils/validation.js';
-import { ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_SECRET_KEY } from '../constants/env.js';
+import { ACCESS_TOKEN_SECRET_KEY } from '../constants/env.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -27,29 +27,47 @@ export class UsersService {
         return errorMessage;
       }
 
-      // // username 조건에 벗어나는 경우
-      // if (!isValidUsername(username)) {
-      //   const errorMessage = {
-      //     status: 400,
-      //     message: {
-      //       error: {
-      //         code: 'USER_NAME_RULE',
-      //         message: 'username은 영어 소문자 1~30 글자만 입력 가능합니다.',
-      //       },
-      //     },
-      //   };
-      //   return errorMessage;
-      // }
+      // username이 누락된 경우
+      if (!username) {
+        const errorMessage = {
+          status: 400,
+          message: {
+            error: {
+              code: 'USER_NAME_NULL',
+              message: 'username을 입력해주세요.',
+            },
+          },
+        };
+        return errorMessage;
+      }
 
-      // // password 조건에 벗어나는 경우
-      // if (!isValidPassword(password)) {
-      //   const errorMessage = {
-      //     status: 400,
-      //     message:
-      //       'password는 최소 8자리 이상 영문 대소문자, 숫자, 특수문자가 각각 1개 이상 입력해주세요.',
-      //   };
-      //   return errorMessage;
-      // }
+      // password가 누락된 경우
+      if (!password) {
+        const errorMessage = {
+          status: 400,
+          message: {
+            error: {
+              code: 'USER_PASSWORD_NULL',
+              message: 'password를 입력해주세요.',
+            },
+          },
+        };
+        return errorMessage;
+      }
+
+      // nickname이 누락된 경우
+      if (!nickname) {
+        const errorMessage = {
+          status: 400,
+          message: {
+            error: {
+              code: 'USER_NICKNAME_NULL',
+              message: 'nickname을 입력해주세요.',
+            },
+          },
+        };
+        return errorMessage;
+      }
 
       // 신규 사용자 등록
       const createUser = await this.usersRepository.createUser(username, password, nickname);
@@ -102,9 +120,38 @@ export class UsersService {
 
   validateToken = async (token) => {
     try {
-      return jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
+      if (!token) {
+        const errorMessage = {
+          status: 400,
+          message: {
+            error: {
+              code: 'TOKEN_NOT_FOUND',
+              message: '토큰이 없습니다.',
+            },
+          },
+        };
+        return errorMessage;
+      }
+
+      const validation = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
+
+      const successMessage = {
+        status: 200,
+        message: { message: '정상적으로 인증되었습니다.' },
+      };
+
+      return successMessage;
     } catch (err) {
-      return null;
+      const errorMessage = {
+        status: 400,
+        message: {
+          error: {
+            code: 'INVALID_TOKEN',
+            message: '토큰이 유효하지 않습니다.',
+          },
+        },
+      };
+      return errorMessage;
     }
   };
 }
