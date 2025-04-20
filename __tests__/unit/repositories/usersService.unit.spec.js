@@ -27,11 +27,6 @@ describe('Users Service Unit Test', () => {
     const sampleUser = {
       username: 'jinho',
       nickname: 'Mentos',
-      authorities: [
-        {
-          authorityName: 'ROLE_USER',
-        },
-      ],
     };
 
     // usersService의 signUp Method를 실행합니다.

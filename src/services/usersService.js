@@ -1,8 +1,7 @@
-import { isValidPassword, isValidUsername } from '../utils/validation.js';
-import { ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_SECRET_KEY } from '../constants/env.js';
+// import { isValidPassword, isValidUsername } from '../utils/validation.js';
+import { ACCESS_TOKEN_SECRET_KEY } from '../constants/env.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import CustomError from '../utils/customError.js';
 
 export class UsersService {
   constructor(usersRepository) {
@@ -17,27 +16,27 @@ export class UsersService {
       // 이미 존재하는 사용자일 경우
       if (isExistUser) {
         const errorMessage = {
-          status: 400,
-          message: '이미 존재하는 username 입니다.',
+          status: 409,
+          message: {
+            error: {
+              code: 'USER_ALREADY_EXISTS',
+              message: '이미 가입된 사용자입니다.',
+            },
+          },
         };
         return errorMessage;
       }
 
-      // username 조건에 벗어나는 경우
-      if (!isValidUsername(username)) {
+      // 모든 항목을 기입하지 않았을 경우
+      if (!username || !password || !nickname) {
         const errorMessage = {
           status: 400,
-          message: 'username은 영어 소문자 1~30 글자만 입력 가능합니다.',
-        };
-        return errorMessage;
-      }
-
-      // password 조건에 벗어나는 경우
-      if (!isValidPassword(password)) {
-        const errorMessage = {
-          status: 400,
-          message:
-            'password는 최소 8자리 이상 영문 대소문자, 숫자, 특수문자가 각각 1개 이상 입력해주세요.',
+          message: {
+            error: {
+              code: 'USER_DATA_NULL',
+              message: '모든 항목을 기입해주세요.',
+            },
+          },
         };
         return errorMessage;
       }
@@ -61,44 +60,70 @@ export class UsersService {
       // 사용자 조회
       const user = await this.usersRepository.findUserByUserName(username);
 
-      // username 검증
-      if (!user) {
+      // username, password 검증
+      if (!user || !(await bcrypt.compare(password, user.password))) {
         const errorMessage = {
-          status: 401,
-          message: '존재하지 않는 사용자입니다.',
-        };
-        return errorMessage;
-      }
-
-      // password 검증
-      if (!(await bcrypt.compare(password, user.password))) {
-        const errorMessage = {
-          status: 401,
-          message: '비밀번호가 일치하지 않습니다.',
+          status: 400,
+          message: {
+            error: {
+              code: 'INVALID_CREDENTIALS',
+              message: '아이디 또는 비밀번호가 올바르지 않습니다.',
+            },
+          },
         };
         return errorMessage;
       }
 
       // jwt 토큰 발급
-      const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '10m' });
-      const refreshToken = jwt.sign({ id: user.id }, REFRESH_TOKEN_SECRET_KEY, { expiresIn: '1d' });
-
-      const token = {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      };
+      const accessToken = jwt.sign({ id: user.id }, ACCESS_TOKEN_SECRET_KEY, { expiresIn: '1m' });
 
       const successMessage = {
         status: 200,
-        message: token,
+        message: {
+          token: accessToken,
+        },
       };
 
       return successMessage;
-
-      // 사용자에게 반환되는 데이터
-      return token;
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  validateToken = async (token) => {
+    try {
+      if (!token) {
+        const errorMessage = {
+          status: 400,
+          message: {
+            error: {
+              code: 'TOKEN_NOT_FOUND',
+              message: '토큰이 없습니다.',
+            },
+          },
+        };
+        return errorMessage;
+      }
+
+      const validation = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
+
+      const successMessage = {
+        status: 200,
+        message: { message: '정상적으로 인증되었습니다.' },
+      };
+
+      return successMessage;
+    } catch (err) {
+      const errorMessage = {
+        status: 401,
+        message: {
+          error: {
+            code: 'INVALID_TOKEN',
+            message: '토큰이 유효하지 않습니다.',
+          },
+        },
+      };
+      return errorMessage;
     }
   };
 }
